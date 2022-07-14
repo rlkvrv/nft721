@@ -90,7 +90,8 @@ describe('Token contract', () => {
     expect(await basic721.ownerOf(0)).eq(signer.address);
 
     // owner address is not an owner of token 0
-    await basic721.connect(owner).burnNft(0);
+    // if the method is not protected, anyone can burn
+    await basic721.connect(recipient).burnNft(0);
 
     expect(await basic721.balanceOf(owner.address)).eq(0);
     expect(await basic721.balanceOf(signer.address)).eq(0);

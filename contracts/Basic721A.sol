@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "erc721a/contracts/ERC721A.sol";
 
-contract Basic721 is ERC721A {
+contract Basic721A is ERC721A {
     uint256 private tokenCounter;
     string public baseTokenURI;
 

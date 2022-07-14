@@ -31,6 +31,7 @@ contract NFTWithWhitelist is ERC721URIStorage, ERC2981, Ownable {
             if (operator == marketplaceWhitelist[i]) {
                 marketplaceWhitelist[i] = marketplaceWhitelist[marketplaceWhitelist.length - 1];
                 marketplaceWhitelist.pop();
+                super.setApprovalForAll(operator, false); // TODO
                 break;
             }
         }
@@ -44,7 +45,7 @@ contract NFTWithWhitelist is ERC721URIStorage, ERC2981, Ownable {
                 break;
             }
         }
-        require(isWhitelisted, "Cannot be put up for sale on this marketplace");
+        require(isWhitelisted && approved, "Cannot be put up for sale on this marketplace");
 
         super.setApprovalForAll(operator, approved);
     }
