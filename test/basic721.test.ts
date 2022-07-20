@@ -97,5 +97,12 @@ describe('Token contract', () => {
     expect(await basic721.balanceOf(signer.address)).eq(0);
     await expect(basic721.ownerOf(0)).revertedWith('ERC721: owner query for nonexistent token');
   });
+
+  it('should burned tokens without approval', async () => {
+    const Basic721A = (await ethers.getContractFactory('Basic721'));
+    const basic721A = await Basic721A.deploy('ipfs://basicUri.uri/');
+
+    await basic721A.ownerOf(0);
+  });
 });
 

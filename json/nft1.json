@@ -1,0 +1,6 @@
+{
+    "name":"nft1",
+    "description":"Test for burn!",
+    "image":"ipfs://QmbQaPFLeRuiKm8CzsYzCtu4yfSQTaD9n5fJrrj5NZwNur",
+    "attributes":[{"traitType":"Black","value": 1}]
+}
