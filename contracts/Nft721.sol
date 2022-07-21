@@ -28,7 +28,7 @@ contract Nft721 is ERC721URIStorage, ERC2981, Ownable {
     mapping(address => bool) public marketplaceWhitelist;
     mapping(address => uint256) private _balances;
 
-    constructor() ERC721("Experimental NFT", "EX") {}
+    constructor() ERC721("Nft721", "NFT") {}
 
     event Minted(uint256 tokenId, string tokenUri, address minter);
 
