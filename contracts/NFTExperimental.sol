@@ -6,18 +6,29 @@ import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/*
+ *
+ * Royalties implementation with ERC2981
+ *
+ * Whitelist implementation of marketplaces
+ *
+ * Burning the entire collection
+ *
+ */
+
 contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
 
-    address[] public marketplaceWhitelist;
     bool isSalesStopped;
     uint256 public totalSupply;
 
-    constructor() ERC721("Experimental NFT", "EX") {
-        _setDefaultRoyalty(msg.sender, 222);
-    }
+    mapping(address => bool) public marketplaceWhitelist;
+
+    constructor() ERC721("Experimental NFT", "EX") {}
+
+    event Minted(uint256 tokenId, string tokenUri, address minter);
 
     event DefaultRoyaltyChanged(address indexed receiver, uint96 feeNumerator);
     event DefaultRoyaltyDeleted();
@@ -40,16 +51,21 @@ contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
     function mintNft(string memory _tokenURI) public returns (uint256) {
         uint256 newItemId = _tokenIds.current();
         _tokenIds.increment();
-        totalSupply++;
+        totalSupply += 1;
 
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, _tokenURI);
+
+        emit Minted(newItemId, _tokenURI, _msgSender());
 
         return newItemId;
     }
 
     // only for tests
     function burnNft(uint256 _tokenId) external {
+        require(ownerOf(_tokenId) == _msgSender(), "Only the owner can burn NFT");
+
+        totalSupply -= 1;
         _burn(_tokenId);
     }
 
@@ -65,8 +81,8 @@ contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
     }
 
     /*
-    * Optional
-    */
+     * Optional
+     */
     function deleteDefaultRoyalty() external onlyOwner {
         _deleteDefaultRoyalty();
 
@@ -74,8 +90,8 @@ contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
     }
 
     /*
-    * Optional
-    */
+     * Optional
+     */
     function setTokenRoyalty(
         uint256 tokenId,
         address receiver,
@@ -87,8 +103,8 @@ contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
     }
 
     /*
-    * Optional
-    */
+     * Optional
+     */
     function resetTokenRoyalty(uint256 tokenId) external onlyOwner {
         _resetTokenRoyalty(tokenId);
 
@@ -100,48 +116,35 @@ contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
     // region - Marketplace whitelist -
 
     function addToWhitelist(address operator) external onlyOwner {
-        marketplaceWhitelist.push(operator);
+        marketplaceWhitelist[operator] = true;
 
         emit MarketplaceAddedToWhiteList(operator);
     }
 
     function addBatchToWhitelist(address[] calldata operators) external onlyOwner {
         for (uint256 i; i < operators.length; i++) {
-            marketplaceWhitelist.push(operators[i]);
+            marketplaceWhitelist[operators[i]] = true;
         }
 
         emit MarketplaceBatchAddedToWhiteList(operators);
     }
 
     function removeFromWhitelist(address operator) external onlyOwner {
-        for (uint256 i; i < marketplaceWhitelist.length; i++) {
-            if (operator == marketplaceWhitelist[i]) {
-                marketplaceWhitelist[i] = marketplaceWhitelist[marketplaceWhitelist.length - 1];
-                marketplaceWhitelist.pop();
-                super.setApprovalForAll(operator, false); // TODO
-                break;
-            }
-        }
+        marketplaceWhitelist[operator] = false;
+        super.setApprovalForAll(operator, false);
 
         emit RemovedFromMarketplaceWhitelist(operator);
     }
 
     function setApprovalForAll(address operator, bool approved) public override {
-        bool isWhitelisted;
-        for (uint256 i; i < marketplaceWhitelist.length; i++) {
-            if (operator == marketplaceWhitelist[i]) {
-                isWhitelisted = true;
-                break;
-            }
-        }
-        require(isWhitelisted && approved, "Cannot be put up for sale on this marketplace"); //TODO
+        require(marketplaceWhitelist[operator], "Cannot be put up for sale on this marketplace");
 
         super.setApprovalForAll(operator, approved);
     }
 
     // endregion
 
-    // region - Collection is not sold out -
+    // region - Burning the entire collection -
 
     function stopSelling() external onlyOwner {
         isSalesStopped = true;
@@ -160,7 +163,7 @@ contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
 
     // endregion
 
-    // region - Public methods that are needed in case the collection is not sold out -
+    // region - Public methods that are needed in case the collection is burned -
 
     function balanceOf(address owner) public view override returns (uint256) {
         if (isSalesStopped) return 0;
