@@ -22,7 +22,7 @@ contract Nft721 is ERC721URIStorage, ERC2981, Ownable {
     Counters.Counter private _tokenIds;
 
     bool public isSalesStopped;
-    uint256 baseNftPrice = 1 ether;
+    uint256 public baseNftPrice = 1 ether;
     uint256 public totalSupply;
 
     mapping(address => bool) public marketplaceWhitelist;
