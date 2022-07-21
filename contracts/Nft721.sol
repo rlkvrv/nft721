@@ -21,10 +21,12 @@ contract Nft721 is ERC721URIStorage, ERC2981, Ownable {
 
     Counters.Counter private _tokenIds;
 
-    bool isSalesStopped;
+    bool public isSalesStopped;
+    uint256 baseNftPrice = 1 ether;
     uint256 public totalSupply;
 
     mapping(address => bool) public marketplaceWhitelist;
+    mapping(address => uint256) private _balances;
 
     constructor() ERC721("Experimental NFT", "EX") {}
 
@@ -48,7 +50,11 @@ contract Nft721 is ERC721URIStorage, ERC2981, Ownable {
 
     // region - Mint and burn -
 
-    function mintNft(string memory _tokenURI) public returns (uint256) {
+    function mintNft(string memory _tokenURI) public payable returns (uint256) {
+        require(msg.value == baseNftPrice, "The cost of nft is equal to one ether");
+
+        _balances[_msgSender()] += msg.value;
+
         uint256 newItemId = _tokenIds.current();
         _tokenIds.increment();
         totalSupply += 1;
@@ -154,8 +160,19 @@ contract Nft721 is ERC721URIStorage, ERC2981, Ownable {
     }
 
     function _burnAll() private {
-        for (uint256 i; i < totalSupply; i++) {
-            emit Transfer(super.ownerOf(i), address(0), i);
+        uint256 supply = totalSupply;
+
+        for (uint256 i; i < supply; i++) {
+            address nftOwner = super.ownerOf(i);
+            uint256 userBalance = _balances[nftOwner];
+
+            _balances[nftOwner] = 0;
+            totalSupply -= 1;
+
+            (bool success, ) = nftOwner.call{value: userBalance}("");
+            require(success, "Transfer failed");
+
+            emit Transfer(nftOwner, address(0), i);
         }
 
         emit CollectionIsBurned(totalSupply);

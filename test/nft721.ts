@@ -13,33 +13,40 @@ describe('Nft721', () => {
   let operator: SignerWithAddress;
   let operator2: SignerWithAddress;
   let user: SignerWithAddress;
+  let user2: SignerWithAddress;
   let creator: SignerWithAddress;
   let uniqCreator: SignerWithAddress;
   let mockUri: string;
   let zeroAddress: string;
 
   before(async () => {
-    [owner, operator, operator2, user, creator, uniqCreator] = await ethers.getSigners();
+    [owner, operator, operator2, user, user2, creator, uniqCreator] = await ethers.getSigners();
 
     const Nft721 = (await ethers.getContractFactory('Nft721')) as Nft721Factory;
     nft721 = await (await Nft721.deploy()).deployed();
 
     mockUri = 'https://ipfs://blablabla/GJ92jsflki2JGefwE2/';
-    await nft721.mintNft(mockUri);
-    await nft721.mintNft(mockUri);
-    await nft721.mintNft(mockUri);
+    await nft721.mintNft(mockUri, {
+      value: toWei(1),
+    });
+    await nft721.mintNft(mockUri, {
+      value: toWei(1),
+    });
+    await nft721.mintNft(mockUri, {
+      value: toWei(1),
+    });
 
     zeroAddress = ethers.constants.AddressZero;
   });
 
   describe('Royalties implementation with ERC2981', async () => {
     it('only owner can changed royalty params', async () => {
-      const errorString = 'Ownable: caller is not the owner';
+      const errorMessage = 'Ownable: caller is not the owner';
 
-      await expect(nft721.connect(user).setDefaultRoyalty(user.address, 10000)).revertedWith(errorString);
-      await expect(nft721.connect(user).deleteDefaultRoyalty()).revertedWith(errorString);
-      await expect(nft721.connect(user).setTokenRoyalty(0, user.address, 10000)).revertedWith(errorString);
-      await expect(nft721.connect(user).resetTokenRoyalty(0)).revertedWith(errorString);
+      await expect(nft721.connect(user).setDefaultRoyalty(user.address, 10000)).revertedWith(errorMessage);
+      await expect(nft721.connect(user).deleteDefaultRoyalty()).revertedWith(errorMessage);
+      await expect(nft721.connect(user).setTokenRoyalty(0, user.address, 10000)).revertedWith(errorMessage);
+      await expect(nft721.connect(user).resetTokenRoyalty(0)).revertedWith(errorMessage);
     });
 
     it('should added default royalty 100 basic points (1%)', async () => {
@@ -121,6 +128,67 @@ describe('Nft721', () => {
 
       await expect(nft721.setApprovalForAll(operator2.address, true))
         .revertedWith('Cannot be put up for sale on this marketplace');
+    });
+  });
+
+  describe('Burning the entire collection', async () => {
+    before(async () => {
+      // minting NFT from two more accounts
+      await nft721.connect(user).mintNft(mockUri, {
+        value: toWei(1),
+      });
+      await nft721.connect(user2).mintNft(mockUri, {
+        value: toWei(1),
+      });
+
+      // give permission
+      await nft721.approve(user.address, 1);
+      await nft721.addToWhitelist(operator.address);
+      await nft721.setApprovalForAll(operator.address, true);
+    });
+
+    it('should return error if not an owner', async () => {
+      const errorMessage = 'Ownable: caller is not the owner';
+
+      await expect(nft721.connect(user).stopSelling()).rejectedWith(errorMessage);
+    });
+
+    it('should stop sales and burn the whole collection', async () => {
+      const tx = await nft721.stopSelling();
+
+      expect(await nft721.isSalesStopped()).to.be.true;
+
+      // return of ether for three tokens
+      await expect(tx).to.changeEtherBalance(owner.address, toWei(3));
+      await expect(tx).to.changeEtherBalance(user.address, toWei(1));
+      await expect(tx).to.changeEtherBalance(user2.address, toWei(1));
+    });
+
+    it('totalSupply should be equal zero', async () => {
+      expect(await nft721.totalSupply()).eq(0);
+    });
+
+    it('balances should be equal zero', async () => {
+      expect(await nft721.balanceOf(owner.address)).eq(0);
+      expect(await nft721.balanceOf(user.address)).eq(0);
+      expect(await nft721.balanceOf(user2.address)).eq(0);
+    });
+
+    it('ownerOf should return error', async () => {
+      const errorMessage = 'ERC721: owner query for nonexistent token';
+
+      await expect(nft721.ownerOf(0)).revertedWith(errorMessage);
+      await expect(nft721.ownerOf(1)).revertedWith(errorMessage);
+    });
+
+    it('getApproved / isApproveForAll should return error / false', async () => {
+      await expect(nft721.getApproved(1)).revertedWith('ERC721: approved query for nonexistent token');
+
+      expect(await nft721.isApprovedForAll(owner.address, operator.address)).to.be.false;
+    });
+
+    it('tokenUri should return error', async () => {
+      await expect(nft721.tokenURI(1)).revertedWith('ERC721Metadata: URI query for nonexistent token');
     });
   });
 });
