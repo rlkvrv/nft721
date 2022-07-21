@@ -1,10 +1,10 @@
 import { ethers } from 'hardhat';
 
 async function main() {
-  const NFTExperimental = (await ethers.getContractFactory('NFTExperimental'));
-  const nftExperimental = await (await NFTExperimental.deploy()).deployed();
+  const Nft721 = (await ethers.getContractFactory('Nfn721'));
+  const nft721 = await (await Nft721.deploy()).deployed();
 
-  console.log('Contract address: ', nftExperimental.address);
+  console.log('Contract address: ', nft721.address);
 }
 
 main()
