@@ -77,32 +77,5 @@ describe('Token contract', () => {
     // await basic721.transferFrom(owner.address, recipient.address, 3); //instead of a transfer
     // console.log('basicURI_4: ', await basic721.tokenURI(3));
   });
-
-  it('should burned tokens without approval', async () => {
-    await basic721.mintNft('dog');
-    expect(await basic721.balanceOf(owner.address)).eq(1);
-    expect(await basic721.ownerOf(0)).eq(owner.address);
-
-    await basic721.transferFrom(owner.address, signer.address, 0);
-
-    expect(await basic721.balanceOf(owner.address)).eq(0);
-    expect(await basic721.balanceOf(signer.address)).eq(1);
-    expect(await basic721.ownerOf(0)).eq(signer.address);
-
-    // owner address is not an owner of token 0
-    // if the method is not protected, anyone can burn
-    await basic721.connect(recipient).burnNft(0);
-
-    expect(await basic721.balanceOf(owner.address)).eq(0);
-    expect(await basic721.balanceOf(signer.address)).eq(0);
-    await expect(basic721.ownerOf(0)).revertedWith('ERC721: owner query for nonexistent token');
-  });
-
-  it('should burned tokens without approval', async () => {
-    const Basic721A = (await ethers.getContractFactory('Basic721'));
-    const basic721A = await Basic721A.deploy('ipfs://basicUri.uri/');
-
-    await basic721A.ownerOf(0);
-  });
 });
 

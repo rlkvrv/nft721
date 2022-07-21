@@ -31,27 +31,27 @@ describe('Token contract', () => {
       - нет функции ownerOf
     */
 
-    console.log('erc1155 URI: ', await basic1155.uri(1));
-    console.log('erc1155 URI: ', await basic1155.uri(2));
-    console.log('erc1155 URI: ', await basic1155.uri(5));
+    // console.log('erc1155 URI: ', await basic1155.uri(1));
+    // console.log('erc1155 URI: ', await basic1155.uri(2));
+    // console.log('erc1155 URI: ', await basic1155.uri(5));
 
-    await basic1155.mintBatch(
-      owner.address, [1, 2, 5], [10, 20, 50], '0x'
-    );
+    // await basic1155.mintBatch(
+    //   owner.address, [1, 2, 5], [10, 20, 50], '0x'
+    // );
 
-    console.log('balanceOf:', await basic1155.balanceOf(owner.address, 1));
-    console.log('balanceOfBatch 1 2 5:', await basic1155.balanceOfBatch([owner.address, owner.address, owner.address], [1, 2, 5]));
+    // console.log('balanceOf:', await basic1155.balanceOf(owner.address, 1));
+    // console.log('balanceOfBatch 1 2 5:', await basic1155.balanceOfBatch([owner.address, owner.address, owner.address], [1, 2, 5]));
 
-    await basic1155.safeTransferFrom(
-      owner.address, recipient.address, 5, 1, '0x'
-    );
+    // await basic1155.safeTransferFrom(
+    //   owner.address, recipient.address, 5, 1, '0x'
+    // );
 
-    await basic1155.safeBatchTransferFrom(
-      owner.address, signer.address, [2, 5], [5, 5], '0x'
-    );
+    // await basic1155.safeBatchTransferFrom(
+    //   owner.address, signer.address, [2, 5], [5, 5], '0x'
+    // );
 
-    console.log('balanceOfBatch 2:', await basic1155.balanceOfBatch([signer.address, recipient.address], [2, 2]));
-    console.log('balanceOfBatch 5:', await basic1155.balanceOfBatch([signer.address, recipient.address], [5, 5]));
+    // console.log('balanceOfBatch 2:', await basic1155.balanceOfBatch([signer.address, recipient.address], [2, 2]));
+    // console.log('balanceOfBatch 5:', await basic1155.balanceOfBatch([signer.address, recipient.address], [5, 5]));
   });
 });
 
