@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *
  */
 
-contract NFTExperimental is ERC721URIStorage, ERC2981, Ownable {
+contract Nft721 is ERC721URIStorage, ERC2981, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
