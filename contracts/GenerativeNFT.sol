@@ -163,7 +163,7 @@ contract GenerativeNFT is ERC721, ERC2981, Ownable {
     }
 
     function setApprovalForAll(address operator, bool approved) public override {
-        require(marketplaceWhitelist[operator], "Cannot be put up for sale on this marketplace");
+        // require(marketplaceWhitelist[operator], "Cannot be put up for sale on this marketplace");
 
         super.setApprovalForAll(operator, approved);
     }
